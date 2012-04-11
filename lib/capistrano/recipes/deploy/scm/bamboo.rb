@@ -19,12 +19,15 @@ module Capistrano
         end
 
         def checkout(revision, destination)
+          # TODO: graceful error handling
           response = Typhoeus::Request.get("#{repository}/result/#{variable(:plan_key)}/#{variable(:build_number)}.json?expand=artifacts", :username => variable(:scm_username), :password => variable(:scm_passphrase))
           result = JSON.parse(response.body)
           artifact = result["artifacts"]["artifact"].select { |artifact| artifact["name"] == variable(:artifact) }
           artifactUrl = artifact[0]["link"]["href"]
           
-          %Q{TMPDIR=`mktemp -d` && cd $TMPDIR && wget -m -nH -q #{artifactUrl} && mv artifact "#{destination}" && rm -rf "$TMPDIR"}
+          build_actual = result["number"]
+          
+          %Q{TMPDIR=`mktemp -d` && cd $TMPDIR && wget -m -nH -q #{artifactUrl} && mv artifact/#{variable(:plan_key)}/shared/build-#{build_actual}/#{variable(:artifact)}/ "#{destination}" && rm -rf "$TMPDIR"}
         end
 
         alias_method :export, :checkout
