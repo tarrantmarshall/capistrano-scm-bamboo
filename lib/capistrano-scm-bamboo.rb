@@ -1,2 +1,2 @@
-require "capistrano-scm-jenkins/version"
-require "capistrano/recipes/deploy/scm/jenkins"
+require "capistrano-scm-bamboo/version"
+require "capistrano/recipes/deploy/scm/bamboo"

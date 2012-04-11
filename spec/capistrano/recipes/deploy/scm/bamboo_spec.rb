@@ -1,10 +1,10 @@
 require 'spec_helper'
-require 'capistrano/recipes/deploy/scm/jenkins'
+require 'capistrano/recipes/deploy/scm/bamboo'
 
 module Capistrano::Deploy::SCM
-  describe Jenkins do
+  describe Bamboo do
     before :each do
-      @jenkins = Jenkins.new
+      @bamboo = Bamboo.new
     end
 
     context "last_deploy_build" do

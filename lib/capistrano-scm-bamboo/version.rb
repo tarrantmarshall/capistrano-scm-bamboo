@@ -1,7 +1,7 @@
 module Capistrano
   module Scm
-    module Jenkins
-      VERSION = "0.0.3"
+    module Bamboo
+      VERSION = "1.0.1"
     end
   end
 end
