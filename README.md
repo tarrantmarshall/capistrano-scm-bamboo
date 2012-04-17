@@ -1,52 +1,31 @@
-# capistrano-scm-jenkins
+# capistrano-scm-bamboo
 
-With this plugin, you can use jenkins build artifact as a repository, and
-deploy your build artifact with capistrano.
+With this plugin, you can use Atlassian Bamboo build artifacts as a repository, 
+and deploy your build with Capistrano.
 
 ## INSTALL
 
-    gem install capistrano-scm-jenkins
+    gem install capistrano-scm-bamboo
 
 ## USAGE
 
-a sample config/deploy.rb
+Sample extract from config/deploy.rb
 
-    require 'capistrano-scm-jenkins'
-
-    set :application, "example"
-    set :repository,  "http://jenkins.example.com/job/example/"
-
-    set :scm, :jenkins
-
-    # uncomment following line if you want deploy unstable version
-    #   set :jenkins_use_unstable, true
-
-    # jenkins username and password
-    #   set :scm_username, ENV['JENKINS_USERNAME']
-    #   set :scm_password, ENV['JENKINS_PASSWORD']
-    # or use the netrc support for curl
-    #   set :jenkins_use_netrc, true
-    #
-    # if you use netrc, add the following line in your $HOME/.netrc
-    #   machine jenkins.example.com login USERNAME password secret
-
-
-    set :user, 'lidaobing'
-    set :use_sudo, false
-    set :deploy_to, "/home/#{user}/apps/#{application}"
-
-    role :web, "test.example.com"                          # Your HTTP server, Apache/etc
-    role :app, "test.example.com"                          # This may be the same as your `Web` server
-    role :db,  "test.example.com", :primary => true # This is where Rails migrations will run
-
-for more information about capistrano, check https://github.com/capistrano/capistrano
-
-### maven module
-
-for the maven module, you should include the module name in your repository url. for example:
-
-    set :repository,  "http://jenkins.example.com/job/example/com.example.helloworld$helloworld/"
-
+    require 'capistrano-scm-bamboo'
+	
+	set :application, "example"
+	
+	set :scm, bamboo
+	set :repository, "http://bamboo.local/rest/api/latest"
+	
+    set :scm_username, ENV['CAP_BUILD_USER'] || "build"
+    set :scm_passphrase, ENV['CAP_BUILD_PASS'] || Proc.new { Capistrano::CLI.password_prompt("Please enter the Bamboo password for '#{scm_username}': ") }
+	
+	# If calling Cap from within Bamboo, these can be passed via -s options on the Cap call itself to override
+    set :plan_key, "PROJECT-PLAN"
+    set :build_number, "latest"
+    set :artifact, "artifact"
+	
 ## LICENSE
 
 Permission is hereby granted, free of charge, to any person obtaining
