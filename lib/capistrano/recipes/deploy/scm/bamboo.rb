@@ -9,7 +9,7 @@ module Capistrano
             
       class Bamboo < Base
         def head
-          "#{variable(:plan_key)}-#{variable(:build_number)}"
+          "#{plan_key}-#{variable(:build_number)}"
         end
 
         def query_revision(revision)
@@ -20,14 +20,25 @@ module Capistrano
 
         def checkout(revision, destination)
           # TODO: graceful error handling
-          response = Typhoeus::Request.get("#{repository}/result/#{variable(:plan_key)}/#{variable(:build_number)}.json?expand=artifacts", :username => variable(:scm_username), :password => variable(:scm_passphrase))
+          response = Typhoeus::Request.get("#{repository}/result/#{plan_key}/#{variable(:build_number)}.json?expand=artifacts", :username => variable(:scm_username), :password => variable(:scm_passphrase))
           result = JSON.parse(response.body)
           artifact = result["artifacts"]["artifact"].select { |artifact| artifact["name"] == variable(:artifact) }
           artifactUrl = artifact[0]["link"]["href"]
           
           build_actual = result["number"]
           
-          %Q{TMPDIR=`mktemp -d` && cd $TMPDIR && wget -m -nH -q #{artifactUrl} && mv artifact/#{variable(:plan_key)}/shared/build-#{build_actual}/#{variable(:artifact)}/ "#{destination}" && rm -rf "$TMPDIR"}
+          %Q{TMPDIR=`mktemp -d` && cd $TMPDIR && wget -m -nH -q #{artifactUrl} && mv artifact/#{plan_key}/shared/build-#{build_actual}/#{variable(:artifact)}/ "#{destination}" && rm -rf "$TMPDIR"}
+        end
+        
+        def plan_key
+          if (variable(:plan_key)) 
+            variable(:plan_key)
+          elsif (variable(:build_key))
+            pk = variable(:build_key)
+            pk.slice(0...pk.rindex('-'))
+          else
+            puts "d'oh"
+          end
         end
 
         alias_method :export, :checkout
