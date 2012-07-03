@@ -8,20 +8,31 @@ module Capistrano
     module SCM
             
       class Bamboo < Base
+
+        def load_result
+          response = Typhoeus::Request.get("#{repository}/result/#{plan_key}/#{variable(:build_number)}.json?expand=artifacts", :username => variable(:scm_username), :password => variable(:scm_passphrase))
+          result = JSON.parse(response.body)
+        end
+
         def head
-          "#{plan_key}-#{variable(:build_number)}"
+          "#{plan_key}-#{query_revision(variable(:build_number))}"
         end
 
         def query_revision(revision)
-          revision
-          # return revision if revision =~ /^\d+$/
-          # raise "invalid revision: #{revision}"
+          if (revision.to_s =~ /\d+$/)
+            revision
+          elsif (revision =~ /latest$/) 
+            result = load_result
+            
+            result["number"]
+          else
+            raise "invalid revision: #{revision}"
+          end
         end
 
         def checkout(revision, destination)
           # TODO: graceful error handling
-          response = Typhoeus::Request.get("#{repository}/result/#{plan_key}/#{variable(:build_number)}.json?expand=artifacts", :username => variable(:scm_username), :password => variable(:scm_passphrase))
-          result = JSON.parse(response.body)
+          result = load_result
           artifact = result["artifacts"]["artifact"].select { |artifact| artifact["name"] == variable(:artifact) }
           artifactUrl = artifact[0]["link"]["href"]
           
