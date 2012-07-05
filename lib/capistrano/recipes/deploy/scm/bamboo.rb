@@ -41,15 +41,27 @@ module Capistrano
           end
 
           artifactUrl = artifact[0]["link"]["href"]
-          
           build_actual = result["number"]
+
+          # now do clever hackiness to detect whether this is a directory to be synced, or a single inline file/attachment
+          artifact_headers = Typhoeus::Request.head(artifactUrl).headers_hash
+          # if there's a content disposition of attachment, downolad the file directly. if inline, then ?. if no content disposition, then wget the whole directory.
+          artifact_content_disposition = artifact_headers["Content-Disposition"]
+          if (artifact_content_disposition.empty?)
+            %Q{TMPDIR=`mktemp -d` && cd $TMPDIR && wget -m -nH -q #{artifactUrl} && mv artifact/#{plan_key}/shared/build-#{build_actual}/#{variable(:artifact)}/ "#{destination}" && rm -rf "$TMPDIR"}
+          else
+            # get the filename
+            f = artifact_content_disposition.match(/filename="(.*?)"/)[1]
+            %Q{TMPDIR=`mktemp -d` && cd $TMPDIR && wget -m -nH -q #{artifactUrl} -O #{f} && mkdir #{destination} && mv #{f} "#{destination}/" && rm -rf "$TMPDIR"}
+          end
           
-          %Q{TMPDIR=`mktemp -d` && cd $TMPDIR && wget -m -nH -q #{artifactUrl} && mv artifact/#{plan_key}/shared/build-#{build_actual}/#{variable(:artifact)}/ "#{destination}" && rm -rf "$TMPDIR"}
+          ## previous artifact copy when things were only directories. for posterity only.
+          # %Q{TMPDIR=`mktemp -d` && cd $TMPDIR && wget -m -nH -q #{artifactUrl} && mv artifact/#{plan_key}/shared/build-#{build_actual}/#{variable(:artifact)}/ "#{destination}" && rm -rf "$TMPDIR"}
         rescue ArgumentError => e
           logger.log(Logger::IMPORTANT, e.message)
           exit
         end
-
+        
         def plan_key
           if (variable(:plan_key)) 
             variable(:plan_key)
