@@ -33,14 +33,23 @@ module Capistrano
         def checkout(revision, destination)
           # TODO: graceful error handling
           result = load_result
+
           artifact = result["artifacts"]["artifact"].select { |artifact| artifact["name"] == variable(:artifact) }
+
+          if (artifact.empty?)
+            raise ArgumentError, "build artifacts not found: perhaps you didn't correctly specify the artifact parameter?"
+          end
+
           artifactUrl = artifact[0]["link"]["href"]
           
           build_actual = result["number"]
           
           %Q{TMPDIR=`mktemp -d` && cd $TMPDIR && wget -m -nH -q #{artifactUrl} && mv artifact/#{plan_key}/shared/build-#{build_actual}/#{variable(:artifact)}/ "#{destination}" && rm -rf "$TMPDIR"}
+        rescue ArgumentError => e
+          logger.log(Logger::IMPORTANT, e.message)
+          exit
         end
-        
+
         def plan_key
           if (variable(:plan_key)) 
             variable(:plan_key)
