@@ -37,7 +37,7 @@ module Capistrano
           artifact = result["artifacts"]["artifact"].select { |artifact| artifact["name"] == variable(:artifact) }
 
           if (artifact.empty?)
-            raise ArgumentError, "build artifacts not found: perhaps you didn't correctly specify the artifact parameter?"
+            raise ArgumentError, "[err] build artifacts not found: perhaps you didn't correctly specify the artifact parameter?"
           end
 
           artifactUrl = artifact[0]["link"]["href"]
