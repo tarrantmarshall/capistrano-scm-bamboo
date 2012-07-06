@@ -9,6 +9,10 @@ module Capistrano
             
       class Bamboo < Base
 
+        def artifact_name
+          @artifact_name
+        end
+
         def load_result
           response = Typhoeus::Request.get("#{repository}/result/#{plan_key}/#{variable(:build_number)}.json?expand=artifacts", :username => variable(:scm_username), :password => variable(:scm_passphrase))
           result = JSON.parse(response.body)
@@ -48,11 +52,12 @@ module Capistrano
           # if there's a content disposition of attachment, downolad the file directly. if inline, then ?. if no content disposition, then wget the whole directory.
           artifact_content_disposition = artifact_headers["Content-Disposition"]
           if (artifact_content_disposition.empty?)
+            @artifact_name = variable(:artifact)
             %Q{TMPDIR=`mktemp -d` && cd $TMPDIR && wget -m -nH -q #{artifactUrl} && mv artifact/#{plan_key}/shared/build-#{build_actual}/#{variable(:artifact)}/ "#{destination}" && rm -rf "$TMPDIR"}
           else
             # get the filename
-            f = artifact_content_disposition.match(/filename="(.*?)"/)[1]
-            %Q{TMPDIR=`mktemp -d` && cd $TMPDIR && wget -m -nH -q #{artifactUrl} -O #{f} && mkdir #{destination} && mv #{f} "#{destination}/" && rm -rf "$TMPDIR"}
+            @artifact_name = artifact_content_disposition.match(/filename="(.*?)"/)[1]
+            %Q{TMPDIR=`mktemp -d` && cd $TMPDIR && wget -m -nH -q #{artifactUrl} -O #{@artifact_name} && mkdir #{destination} && mv #{@artifact_name} "#{destination}/" && rm -rf "$TMPDIR"}
           end
           
           ## previous artifact copy when things were only directories. for posterity only.
