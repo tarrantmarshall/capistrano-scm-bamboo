@@ -53,11 +53,11 @@ module Capistrano
           artifact_content_disposition = artifact_headers["Content-Disposition"]
           if (artifact_content_disposition.empty?)
             @artifact_name = variable(:artifact)
-            %Q{TMPDIR=`mktemp -d` && cd $TMPDIR && wget -m -nH -q #{artifactUrl} && mv artifact/#{plan_key}/shared/build-#{build_actual}/#{variable(:artifact)}/ "#{destination}" && rm -rf "$TMPDIR"}
+            %Q{TMPDIR=`mktemp -d -t tmp.XXXXXXXXXX` && cd $TMPDIR && wget -m -nH -q #{artifactUrl} && mv artifact/#{plan_key}/shared/build-#{build_actual}/#{variable(:artifact)}/ "#{destination}" && rm -rf "$TMPDIR"}
           else
             # get the filename
             @artifact_name = artifact_content_disposition.match(/filename="(.*?)"/)[1]
-            %Q{TMPDIR=`mktemp -d` && cd $TMPDIR && wget -m -nH -q #{artifactUrl} -O #{@artifact_name} && mkdir #{destination} && mv #{@artifact_name} "#{destination}/" && rm -rf "$TMPDIR"}
+            %Q{TMPDIR=`mktemp -d -t tmp.XXXXXXXXXX` && cd $TMPDIR && wget -m -nH -q #{artifactUrl} -O #{@artifact_name} && mkdir #{destination} && mv #{@artifact_name} "#{destination}/" && rm -rf "$TMPDIR"}
           end
           
           ## previous artifact copy when things were only directories. for posterity only.
