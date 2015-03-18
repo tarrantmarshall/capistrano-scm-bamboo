@@ -48,7 +48,7 @@ module Capistrano
           # if there's a content disposition of attachment, downolad the file directly. if inline, then ?. if no content disposition, then wget the whole directory.
           artifact_content_disposition = artifact_headers["Content-Disposition"]
           if (artifact_content_disposition.empty?)
-            %Q{TMPDIR=`mktemp -d` && cd $TMPDIR && wget -m -nH -q #{artifactUrl} && mv artifact/#{plan_key}/shared/build-#{build_actual}/#{variable(:artifact)}/ "#{destination}" && rm -rf "$TMPDIR"}
+            %Q{TMPDIR=`mktemp -d` && cd $TMPDIR && wget -m -nH -q #{artifactUrl} && mv bamboo/artifact/#{plan_key}/shared/build-#{build_actual}/#{variable(:artifact)}/ "#{destination}" && rm -rf "$TMPDIR"}
           else
             # get the filename
             f = artifact_content_disposition.match(/filename="(.*?)"/)[1]
